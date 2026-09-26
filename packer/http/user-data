@@ -1,0 +1,22 @@
+#cloud-config
+autoinstall:
+  version: 1
+  profile: minimal
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+  ssh:
+    install-server: true
+    allow-pw: true
+  storage:
+    layout:
+      name: direct
+  identity:
+    hostname: ubuntu-template
+    username: "${build_username}"
+    # This is the SHA-512 hash for the password "ubuntu"
+    password: "$6$rounds=4096$randomsalt$QzP5T/v.UfQd8zZ08U.8.5a7zWw2kQ79M0a8m9f.f3Z46/A49T.UqH4A9.G8O/kM1q5/w1Z843z821/2Z7/"
+  user-data:
+    package_upgrade: true
+    packages:
+      - qemu-guest-agent

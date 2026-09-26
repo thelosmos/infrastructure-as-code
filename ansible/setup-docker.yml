@@ -1,0 +1,75 @@
+---
+- name: Provision Docker Engine and Portainer
+  hosts: docker_hosts
+  become: true
+  vars:
+    # Dynamically targets the user passed from your deploy-ansible.sh script
+    docker_user: "{{ ansible_user }}"
+
+  tasks:
+    - name: Update apt cache and install prerequisites
+      apt:
+        name:
+          - ca-certificates
+          - curl
+          - python3-docker
+        state: present
+        update_cache: true
+
+    - name: Create directory for Docker GPG key
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Download Docker official GPG key
+      get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: '0644'
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+        filename: docker
+
+    - name: Install Docker Engine, CLI, and plugins
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+        update_cache: true
+
+    - name: Ensure Docker service is started and enabled on boot
+      systemd:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Add administrative user to the docker group
+      user:
+        name: "{{ docker_user }}"
+        groups: docker
+        append: true
+
+    - name: Create Portainer data volume
+      community.docker.docker_volume:
+        name: portainer_data
+
+    - name: Deploy Portainer Business Edition container
+      community.docker.docker_container:
+        name: portainer
+        image: portainer/portainer-ee:latest
+        restart_policy: always
+        published_ports:
+          - "8000:8000"
+          - "9443:9443"
+        volumes:
+          - "/var/run/docker.sock:/var/run/docker.sock"
+          - "portainer_data:/data"
+        command: ["--license", "{{ portainer_license_key }}"]
