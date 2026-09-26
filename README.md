@@ -33,10 +33,12 @@ This repository contains an automated, zero-trust infrastructure pipeline design
 ├── ansible/
 │   ├── deploy-ansible.sh         # Wrapper script for software configuration
 │   ├── setup-docker.yml          # Docker & Portainer CE/EE deployment playbook
-│   └── inventory.ini             # Target nodes
+│   ├── inventory.ini             # Target nodes
+│   └── requirements.yml          # Ansible module collections required for playbooks
 ├── .env.example                  # Local environment variable template
 ├── .gitignore                    # Prevents state files and local secrets from committing
 └── LICENSE                       # MIT License
+└── Brewfile                      # Dependencies - Can be installed on macOS using Homebrew using the command brew bundle
 
 ```
 
