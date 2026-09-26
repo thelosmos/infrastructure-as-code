@@ -3,8 +3,9 @@
   hosts: docker_hosts
   become: true
   vars:
-    # Dynamically targets the user passed from your deploy-ansible.sh script
     docker_user: "{{ ansible_user }}"
+    # Default to 'agent'. Can be overridden at runtime with 'server' or 'none'
+    portainer_mode: "agent" 
 
   tasks:
     - name: Update apt cache and install prerequisites
@@ -57,11 +58,26 @@
         groups: docker
         append: true
 
-    - name: Create Portainer data volume
+    # --- PORTAINER AGENT DEPLOYMENT ---
+    - name: Deploy Portainer Agent connector
+      community.docker.docker_container:
+        name: portainer_agent
+        image: portainer/agent:latest
+        restart_policy: always
+        published_ports:
+          - "9001:9001"
+        volumes:
+          - "/var/run/docker.sock:/var/run/docker.sock"
+          - "/var/lib/docker/volumes:/var/lib/docker/volumes"
+      when: portainer_mode == 'agent'
+
+    # --- PORTAINER SERVER DEPLOYMENT ---
+    - name: Create Portainer server data volume
       community.docker.docker_volume:
         name: portainer_data
+      when: portainer_mode == 'server'
 
-    - name: Deploy Portainer Business Edition container
+    - name: Deploy Portainer Business Edition Server
       community.docker.docker_container:
         name: portainer
         image: portainer/portainer-ee:latest
@@ -72,4 +88,6 @@
         volumes:
           - "/var/run/docker.sock:/var/run/docker.sock"
           - "portainer_data:/data"
-        command: ["--license", "{{ portainer_license_key }}"]
+        # The default('') prevents errors if the server mode is called without a license key
+        command: ["--license", "{{ portainer_license_key | default('') }}"]
+      when: portainer_mode == 'server'
