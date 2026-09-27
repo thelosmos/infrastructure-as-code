@@ -1,7 +1,9 @@
 #!/bin/bash
 
+set -e
+
 # 1. Load the BWS_ACCESS_TOKEN and secret UUIDs from your local environment file
-source .env
+source ../.env
 
 echo "Fetching secrets from Bitwarden Secrets Manager..."
 
