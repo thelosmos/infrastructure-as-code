@@ -9,6 +9,6 @@ ip_address       = "172.25.100.60/24"
 gateway          = "172.25.100.1"
 
 # Resource Allocations
-cpu_cores        = 2
-memory_mb        = 2048
-disk_size_gb     = 20
+cpu_cores        = 4
+memory_mb        = 8192
+disk_size_gb     = 100

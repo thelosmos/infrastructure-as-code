@@ -10,6 +10,8 @@ echo "Fetching secrets from Bitwarden Secrets Manager..."
 # 2. Extract each secret and map it to the correct Packer variable
 export PKR_VAR_proxmox_token=$(bws secret get $PROXMOX_SECRET_UUID | jq -r .value)
 export PKR_VAR_vm_os_username=$(bws secret get $VM_OS_USERNAME_UUID | jq -r .value)
+export PKR_VAR_vm_os_password=$(bws secret get $VM_OS_PASSWORD_UUID | jq -r .value)
+export PKR_VAR_ssh_pub_key=$(bws secret get $VM_SSH_PUB_KEY_UUID | jq -r .value)
 
 echo "Secrets loaded. Initializing Packer..."
 

@@ -1,8 +1,23 @@
+# Bitwarden Provider Credentials
+variable "bws_access_token" { 
+    type = string
+    sensitive = true 
+    }
+variable "bws_organization_id" {type = string }
+variable "bws_identity_url" {
+    type = string
+    default = "https://identity.bitwarden.com"
+    }
+variable "bws_api_url" {
+    type = string
+    default = "https://api.bitwarden.com"
+    }
+
 # Proxmox Authentication
 variable "proxmox_endpoint" { type = string }
 
 # VM Identification and Network
-variable "target_node" { type = string, default = "pve" }
+variable "target_node" { type = string }
 variable "vm_name" { type = string }
 variable "vm_id" { type = number }
 variable "vlan_id" { type = number }

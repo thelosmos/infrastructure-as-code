@@ -16,6 +16,15 @@ variable "vm_os_username" {
   type = string 
 }
 
+variable "vm_os_password" {
+  type        = string
+  sensitive   = true 
+}
+
+variable "ssh_pub_key" {
+  type        = string
+  sensitive   = true 
+}
 
 source "proxmox-iso" "ubuntu_minimal" {
   # Proxmox Connection
@@ -72,7 +81,9 @@ source "proxmox-iso" "ubuntu_minimal" {
     cd_content = {
       "user-data" = templatefile("${path.root}/http/user-data.pkrtpl", {
         vm_os_username = var.vm_os_username
-      })
+        vm_os_password = var.vm_os_password
+        ssh_pub_key    = var.ssh_pub_key
+      }) 
       "meta-data" = "instance-id: packer-ubuntu\nlocal-hostname: ubuntu-template\n"
       "network-config" = <<-EOF
         version: 2
@@ -81,6 +92,7 @@ source "proxmox-iso" "ubuntu_minimal" {
             match:
               name: e*
             dhcp4: true
+            dhcp6: false
         EOF
     }
     iso_storage_pool = "local"
@@ -91,11 +103,11 @@ source "proxmox-iso" "ubuntu_minimal" {
     "<esc><wait>",
     "e<wait>",
     "<down><down><down><end>",
-    " autoinstall ds=nocloud\\;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ ",
+    "autoinstall ds=nocloud ip=dhcp systemd.mask=systemd-networkd-wait-online.service --- ",
     "<f10>"
   ]
 
-  # Packer SSH Authentication (Uses the dynamic BWS username and the dummy password hash from user-data)
+  # Packer SSH Authentication (Uses the dynamic BWS username and password hash from user-data)
   ssh_username   = var.vm_os_username
   ssh_password   = "ubuntu"
   ssh_timeout    = "20m"
@@ -105,6 +117,7 @@ build {
   sources = ["source.proxmox-iso.ubuntu_minimal"]
 
   provisioner "shell" {
+    execute_command = "echo 'ubuntu' | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
     inline = [
       "while [ ! -f /var/lib/cloud/instance/boot-finished ]; do echo 'Waiting for cloud-init...'; sleep 1; done",
       "echo 'Cleaning up machine IDs and APT cache...'",

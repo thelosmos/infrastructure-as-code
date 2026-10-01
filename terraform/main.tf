@@ -4,32 +4,46 @@ terraform {
       source  = "bpg/proxmox"
       version = "~> 0.60.0"
     }
+    bitwarden-secrets = {
+      source  = "bitwarden/bitwarden-secrets"
+    }
   }
 }
 
+provider "bitwarden-secrets" {
+  # The provider will automatically authenticate using the BWS_ACCESS_TOKEN 
+  # environment variable already loaded by your deploy.sh script
+  
+  access_token    = var.bws_access_token
+  organization_id = var.bws_organization_id
+  identity_url    = var.bws_identity_url
+  api_url         = var.bws_api_url
+}
+
+
 # Fetch the Proxmox API Token
-data "bws_secret" "proxmox_token" {
+data "bitwarden-secrets_secret" "proxmox_token" {
   id = var.proxmox_token_uuid
 }
 
 # Fetch the VM OS Username
-data "bws_secret" "vm_username" {
+data "bitwarden-secrets_secret" "vm_username" {
   id = var.vm_os_username_uuid
 }
 
 # Fetch the VM OS Password
-data "bws_secret" "vm_password" {
+data "bitwarden-secrets_secret" "vm_password" {
   id = var.vm_password_uuid
 }
 
 # Fetch the Public SSH Key
-data "bws_secret" "ssh_pub_key" {
+data "bitwarden-secrets_secret" "ssh_pub_key" {
   id = var.ssh_pub_key_uuid
 }
 
 provider "proxmox" {
   endpoint  = var.proxmox_endpoint
-  api_token = data.bws_secret.proxmox_token.value
+  api_token = data.bitwarden-secrets_secret.proxmox_token.value
   insecure  = true                            
 }
 
@@ -75,11 +89,11 @@ resource "proxmox_virtual_environment_vm" "docker_host" {
         gateway = var.gateway
       }
     }
-  user_account {
-    # Inject credentials directly from BWS memory
-    username = data.bws_secret.vm_username.value
-    password = data.bws_secret.vm_password.value
-    keys     = [data.bws_secret.ssh_pub_key.value]
+    user_account {
+      # Inject credentials directly from BWS memory
+      username = data.bitwarden-secrets_secret.vm_username.value
+      password = data.bitwarden-secrets_secret.vm_password.value
+      keys     = [data.bitwarden-secrets_secret.ssh_pub_key.value]
     }
   }
 }
