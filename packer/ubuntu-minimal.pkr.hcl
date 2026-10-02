@@ -120,6 +120,9 @@ build {
     execute_command = "echo 'ubuntu' | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
     inline = [
       "while [ ! -f /var/lib/cloud/instance/boot-finished ]; do echo 'Waiting for cloud-init...'; sleep 1; done",
+      "echo 'Updating packages.'",
+      "sudo apt update -y",
+      "sudo apt upgrade -y",
       "echo 'Cleaning up machine IDs and APT cache...'",
       "sudo rm -f /etc/machine-id",
       "sudo touch /etc/machine-id",
