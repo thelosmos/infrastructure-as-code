@@ -20,8 +20,12 @@ provider "bitwarden-secrets" {
   api_url         = var.bws_api_url
 }
 
+# Fetch the Proxmox Token ID prefix (e.g., root@pam!terraform)
+data "bitwarden-secrets_secret" "proxmox_token_id" {
+  id = var.proxmox_token_id_uuid
+}
 
-# Fetch the Proxmox API Token
+# Fetch the actual Proxmox API Token secret
 data "bitwarden-secrets_secret" "proxmox_token" {
   id = var.proxmox_token_uuid
 }
@@ -38,12 +42,12 @@ data "bitwarden-secrets_secret" "vm_password" {
 
 # Fetch the Public SSH Key
 data "bitwarden-secrets_secret" "ssh_pub_key" {
-  id = var.ssh_pub_key_uuid
+  id = var.vm_ssh_pub_key_uuid
 }
 
 provider "proxmox" {
   endpoint  = var.proxmox_endpoint
-  api_token = data.bitwarden-secrets_secret.proxmox_token.value
+  api_token = "${data.bitwarden-secrets_secret.proxmox_token_id.value}=${data.bitwarden-secrets_secret.proxmox_token.value}"
   insecure  = true                            
 }
 
@@ -83,6 +87,7 @@ resource "proxmox_virtual_environment_vm" "docker_host" {
   }
 
   initialization {
+    datastore_id = "vm-storage"
     ip_config {
       ipv4 {
         address = var.ip_address

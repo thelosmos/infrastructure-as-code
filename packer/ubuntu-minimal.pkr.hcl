@@ -123,7 +123,8 @@ build {
       "echo 'Cleaning up machine IDs and APT cache...'",
       "sudo rm -f /etc/machine-id",
       "sudo touch /etc/machine-id",
-      "sudo apt-get clean"
+      "sudo apt-get clean",
+      "sudo shutdown now"
     ]
   }
 }
